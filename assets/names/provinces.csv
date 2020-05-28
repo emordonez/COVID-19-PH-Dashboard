@@ -1,0 +1,83 @@
+prov_name,prov_internal,reg_name,reg_internal,reg_code
+Abra,ABRA,CAR (Cordillera Administrative Region),CAR,14
+Agusan del Norte,AGUSAN DEL NORTE,Region XIII (Caraga),CARAGA,16
+Agusan del Sur,AGUSAN DEL SUR,Region XIII (Caraga),CARAGA,16
+Aklan,AKLAN,Region VI (Western Visayas),Region VI: Western Visayas,6
+Albay,ALBAY,Region V (Bicol Region),Region V: Bicol Region,5
+Antique,ANTIQUE,Region VI (Western Visayas),Region VI: Western Visayas,6
+Apayao,APAYAO,CAR (Cordillera Administrative Region),CAR,14
+Aurora,AURORA,Region III (Central Luzon),Region III: Central Luzon,3
+Basilan,BASILAN,BARMM (Bangsamoro Autonomous Region in Muslim Mindanao),BARMM,15
+Bataan,BATAAN,Region III (Central Luzon),Region III: Central Luzon,3
+Batanes,BATANES,Region II (Cagayan Valley),Region II: Cagayan Valley,2
+Batangas,BATANGAS,Region IV-A (Calabarzon),Region IV-A: CALABARZON,4
+Benguet,BENGUET,CAR (Cordillera Administrative Region),CAR,14
+Biliran,BILIRAN,Region VIII (Eastern Visayas),Region VIII: Eastern Visayas,8
+Bohol,BOHOL,Region VII (Central Visayas),Region VII: Central Visayas,7
+Bukidnon,BUKIDNON,Region X (Northern Mindanao),Region X: Northern Mindanao,10
+Bulacan,BULACAN,Region III (Central Luzon),Region III: Central Luzon,3
+Cagayan,CAGAYAN,Region II (Cagayan Valley),Region II: Cagayan Valley,2
+Camarines Norte,CAMARINES NORTE,Region V (Bicol Region),Region V: Bicol Region,5
+Camarines Sur,CAMARINES SUR,Region V (Bicol Region),Region V: Bicol Region,5
+Camiguin,CAMIGUIN,Region X (Northern Mindanao),Region X: Northern Mindanao,10
+Capiz,CAPIZ,Region VI (Western Visayas),Region VI: Western Visayas,6
+Catanduanes,CATANDUANES,Region V (Bicol Region),Region V: Bicol Region,5
+Cavite,CAVITE,Region IV-A (Calabarzon),Region IV-A: CALABARZON,4
+Cebu,CEBU PROVINCE,Region VII (Central Visayas),Region VII: Central Visayas,7
+Cotabato,COTABATO,Region XII (Soccsksargen),Region XII: SOCCSKSARGEN,12
+Davao del Norte,DAVAO DEL NORTE,Region XI (Davao Region),Region XI: Davao Region,11
+Davao de Oro,COMPOSTELA VALLEY,Region XI (Davao Region),Region XI: Davao Region,11
+Davao del Sur,DAVAO DEL SUR,Region XI (Davao Region),Region XI: Davao Region,11
+Davao Occidental,DAVAO OCCIDENTAL,Region XI (Davao Region),Region XI: Davao Region,11
+Davao Oriental,DAVAO ORIENTAL,Region XI (Davao Region),Region XI: Davao Region,11
+Dinagat Islands,DINAGAT ISLANDS,Region XIII (Caraga),CARAGA,16
+Eastern Samar,EASTERN SAMAR,Region VIII (Eastern Visayas),Region VIII: Eastern Visayas,8
+Guimaras,GUIMARAS,Region VI (Western Visayas),Region VI: Western Visayas,6
+Ifugao,IFUGAO,CAR (Cordillera Administrative Region),CAR,14
+Ilocos Norte,ILOCOS NORTE,Region I (Ilocos Region),Region I: Ilocos Region,1
+Ilocos Sur,ILOCOS SUR,Region I (Ilocos Region),Region I: Ilocos Region,1
+Iloilo,ILOILO PROVINCE,Region VI (Western Visayas),Region VI: Western Visayas,6
+Isabela,ISABELA,Region II (Cagayan Valley),Region II: Cagayan Valley,2
+Kalinga,KALINGA,CAR (Cordillera Administrative Region),CAR,14
+La Union,LA UNION,Region I (Ilocos Region),Region I: Ilocos Region,1
+Laguna,LAGUNA,Region IV-A (Calabarzon),Region IV-A: CALABARZON,4
+Lanao del Norte,LANAO DEL NORTE,Region X (Northern Mindanao),Region X: Northern Mindanao,10
+Lanao del Sur,LANAO DEL SUR,BARMM (Bangsamoro Autonomous Region in Muslim Mindanao),BARMM,15
+Leyte,LEYTE,Region VIII (Eastern Visayas),Region VIII: Eastern Visayas,8
+Maguindanao,MAGUINDANAO,BARMM (Bangsamoro Autonomous Region in Muslim Mindanao),BARMM,15
+Marinduque,MARINDUQUE,Region IV-B (Mimaropa),Region IV-B: MIMAROPA,17
+Masbate,MASBATE,Region V (Bicol Region),Region V: Bicol Region,5
+Misamis Occidental,MISAMIS OCCIDENTAL,Region X (Northern Mindanao),Region X: Northern Mindanao,10
+Misamis Oriental,MISAMIS ORIENTAL,Region X (Northern Mindanao),Region X: Northern Mindanao,10
+Mountain Province,MOUNTAIN PROVINCE,CAR (Cordillera Administrative Region),CAR,14
+Negros Occidental,NEGROS OCCIDENTAL,Region VI (Western Visayas),Region VI: Western Visayas,6
+Negros Oriental,NEGROS ORIENTAL,Region VII (Central Visayas),Region VII: Central Visayas,7
+Northern Samar,NORTHERN SAMAR,Region VIII (Eastern Visayas),Region VIII: Eastern Visayas,8
+Nueva Ecija,NUEVA ECIJA,Region III (Central Luzon),Region III: Central Luzon,3
+Nueva Vizcaya,NUEVA VIZCAYA,Region II (Cagayan Valley),Region II: Cagayan Valley,2
+Occidental Mindoro,OCCIDENTAL MINDORO,Region IV-B (Mimaropa),Region IV-B: MIMAROPA,17
+Oriental Mindoro,ORIENTAL MINDORO,Region IV-B (Mimaropa),Region IV-B: MIMAROPA,17
+Palawan,PALAWAN,Region IV-B (Mimaropa),Region IV-B: MIMAROPA,17
+Pampanga,PAMPANGA,Region III (Central Luzon),Region III: Central Luzon,3
+Pangasinan,PANGASINAN,Region I (Ilocos Region),Region I: Ilocos Region,1
+Quezon,QUEZON,Region IV-A (Calabarzon),Region IV-A: CALABARZON,4
+Quirino,QUIRINO,Region II (Cagayan Valley),Region II: Cagayan Valley,2
+Rizal,RIZAL,Region IV-A (Calabarzon),Region IV-A: CALABARZON,4
+Romblon,ROMBLON,Region IV-B (Mimaropa),Region IV-B: MIMAROPA,17
+Samar,SAMAR,Region VIII (Eastern Visayas),Region VIII: Eastern Visayas,8
+Sarangani,SARANGANI,Region XII (Soccsksargen),Region XII: SOCCSKSARGEN,12
+Siquijor,SIQUIJOR,Region VII (Central Visayas),Region VII: Central Visayas,7
+Sorsogon,SORSOGON,Region V (Bicol Region),Region V: Bicol Region,5
+South Cotabato,SOUTH COTABATO,Region XII (Soccsksargen),Region XII: SOCCSKSARGEN,12
+Southern Leyte,SOUTHERN LEYTE,Region VIII (Eastern Visayas),Region VIII: Eastern Visayas,8
+Sultan Kudarat,SULTAN KUDARAT,Region XII (Soccsksargen),Region XII: SOCCSKSARGEN,12
+Sulu,SULU,BARMM (Bangsamoro Autonomous Region in Muslim Mindanao),BARMM,15
+Surigao del Norte,SURIGAO DEL NORTE,Region XIII (Caraga),CARAGA,16
+Surigao del Sur,SURIGAO DEL SUR,Region XIII (Caraga),CARAGA,16
+Tarlac,TARLAC PROVINCE,Region III (Central Luzon),Region III: Central Luzon,3
+Tawi-Tawi,TAWI-TAWI,BARMM (Bangsamoro Autonomous Region in Muslim Mindanao),BARMM,15
+Zambales,ZAMBALES,Region III (Central Luzon),Region III: Central Luzon,3
+Zamboanga del Norte,ZAMBOANGA DEL NORTE,Region IX (Zamboanga Peninsula),Region IX: Zamboanga Peninsula,9
+Zamboanga del Sur,ZAMBOANGA DEL SUR,Region IX (Zamboanga Peninsula),Region IX: Zamboanga Peninsula,9
+Zamboanga Sibugay,ZAMBOANGA SIBUGAY,Region IX (Zamboanga Peninsula),Region IX: Zamboanga Peninsula,9
+Metro Manila,METRO MANILA,NCR (National Capital Region),NCR,13
