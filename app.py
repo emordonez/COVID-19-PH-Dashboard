@@ -276,14 +276,22 @@ app.layout = dbc.Container(
         ),
         dbc.Row(html.H2('COVID-19 Cases and Testing in the Philippines'), className='mt-3 ml-1'),
         html.Hr(),
-        dbc.Row(dbc.Col(html.P(
-        '''
-        Hover on a trace for more data. Click on a trace in the legend to add/remove it
-        from the plot. Double click on a trace to isolate it, and double click again to
-        restore all other traces. Use the tools in the upper right of the plot to pan,
-        zoom, and compare data on hover.
-        '''
-        ))),
+        dbc.Row(
+            dbc.Col(
+                dbc.Collapse(
+                    html.P(
+                    '''
+                    Hover on a trace for more data. Click on a trace in the legend to
+                    add/remove it from the plot. Double click on a trace to isolate it,
+                    and double click again to restore all other traces. Use the tools in
+                    the upper right of the plot to pan, zoom, and compare data on hover.
+                    '''
+                    ),
+                    id='instructions-collapse',
+                    is_open=False
+                )
+            )
+        ),
         dbc.Row([
             dbc.Col(
                 dbc.Tabs(
@@ -738,17 +746,17 @@ def on_data_set_table(data, active_tab):
 
 
 @app.callback(
-    Output('tab-content', 'children'),
-    [Input('tabs', 'active_tab')]
+    [Output('tab-content', 'children'), Output('instructions-collapse', 'is_open')],
+    [Input('tabs', 'active_tab')],
 )
 def render_tab_content(active_tab):
     if active_tab is not None:
         if active_tab == 'summary':
-            return summary_display
+            return summary_display, False
         elif active_tab == 'cases':
-            return cases_display
+            return cases_display, True
         elif active_tab == 'testing':
-            return testing_display
+            return testing_display, False
 
 
 if __name__ == '__main__':
