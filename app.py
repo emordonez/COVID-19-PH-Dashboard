@@ -1,18 +1,16 @@
 from datetime import date, datetime
 
-import pandas as pd
-
-import plotly.express as px
-import plotly.graph_objects as go
-
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+
+import pandas as pd
+
+import plotly.express as px
 
 
 def case_aggregates(df):
@@ -31,17 +29,21 @@ def clean_dates(df):
     return df['DateRepRem']
 
 
+# Read data
+# TODO Write scripts to automatically download the latest data from Google Drive
+cases = pd.read_csv('DOH COVID Data Drop_ 20200529 - 04 Case Information.csv')
+aggs = pd.read_csv('DOH COVID Data Drop_ 20200529 - 07 Testing Aggregates.csv')
+
 # Names management
-reg_df = pd.read_csv('assets/names/regions.csv').set_index('internal_name')
+reg_df = pd.read_csv('assets/regions.csv').set_index('internal_name')
 regions_dict = reg_df.to_dict('index')
 region_names = reg_df.index.tolist()
 
-prov_df = pd.read_csv('assets/names/provinces.csv')
+prov_df = pd.read_csv('assets/provinces.csv')
 provinces_by_region_dict = prov_df.groupby('reg_internal')['prov_internal'].apply(list).to_dict()
 province_names = dict(zip(prov_df['prov_internal'], prov_df['prov_name']))
 
 # Case information cleaning
-cases = pd.read_csv('DOH COVID Data Drop_ 20200524 - 04 Case Information.csv')
 cases.drop(
     columns=[
         'Age', 'RemovalType', 'Admitted', 'CityMuniPSGC',
@@ -59,12 +61,23 @@ cases.rename(
 for column in cases[['DateRepConf', 'DateRepRem', 'DateDied', 'DateRecover']]:
     cases[column] = cases[column].dropna().apply(lambda x: datetime.strptime(x, '%Y-%m-%d'))
 cases['DateRepRem'] = cases.apply(clean_dates, axis=1)
-cases = cases.assign(Country='Philippines')
+cases = cases.assign(Country='PHILIPPINES')
+AGEGROUP_ORDER = [
+    '0 to 4', '5 to 9', '10 to 14', '15 to 19', '20 to 24', '25 to 29',
+    '30 to 34','35 to 39','40 to 44', '45 to 49', '50 to 54', '55 to 59',
+    '60 to 64', '65 to 69', '70 to 74', '75 to 79', '80+'
+]
+
+# Populations for rate adjustment
+population = pd.read_csv('assets/population.csv')
+cases = cases.merge(population, left_on='Province', right_on='name', how='left')
+NATIONAL_POP = population[population['name'] == 'PHILIPPINES']['pop_2015'].iloc[0]
 
 # Testing aggregates cleaning
-aggs = pd.read_csv('DOH COVID Data Drop_20200524 - 07 Testing Aggregates.csv')
+# TODO Clean and display data in aggs dataframe
 
 # Case and testing summary strings
+# TODO Format confirmation string to show date of the latest data drop
 CASES = f"{cases['CaseCode'].count():,}" + " cases"
 DEATHS = f"{cases[cases['HealthStatus'] == 'Died']['CaseCode'].count():,}" + " deaths"
 RECOVERIES = f"{cases[cases['HealthStatus'] == 'Recovered']['CaseCode'].count():,}" + " recoveries"
@@ -72,14 +85,21 @@ CONFIRM_TO_DATE = "confirmed by the Department of Health as of " + date.today().
 
 TOTAL_TESTS = (f"{aggs.groupby('facility_name')['cumulative_unique_individuals'].max().sum():,}" +
     " people tested")
-TEST_TO_DATE = "by 35 facilities nationwide, certified by the Department of Health."
+TEST_TO_DATE = "by 35 DOH certified facilities nationwide."
 
 # Inputs
 all_provinces_check = dbc.FormGroup([
     dbc.Checklist(
-        options=[{'label': 'Displaying aggregate national data', 'value': 'Yes'}],
-        value=['Yes'],
+        options=[{'label': 'Display aggregate national data', 'value': 'Y'}],
+        value=[],
         id='all-provinces-check'
+    )
+])
+summed_provinces_check = dbc.FormGroup([
+    dbc.Checklist(
+        options=[{'label': 'Group provincial data together', 'value': 'Y'}],
+        value=[],
+        id='summed-provinces-check'
     )
 ])
 subdivisions_dropdown = dbc.FormGroup([
@@ -101,6 +121,15 @@ subdivisions_dropdown = dbc.FormGroup([
         value=[],
         placeholder='Search provinces'
     ),
+    dbc.Button(
+        'Select provinces',
+        id='select-button',
+        n_clicks=0,
+        disabled=False,
+        className='mt-3 mb-1',
+        color='primary',
+        size='sm'
+    )
 ])
 filters_switch = dbc.FormGroup([
     dbc.Label('Breakdown cases by:'),
@@ -120,15 +149,8 @@ search_panel = dbc.Collapse(
     dbc.Card(
         dbc.CardBody([
             all_provinces_check,
+            summed_provinces_check,
             subdivisions_dropdown,
-            dbc.Button(
-                'Select provinces',
-                id='select-button',
-                disabled=False,
-                className='mb-1',
-                color='primary',
-                size='sm'
-            ),
             filters_switch
         ])
     ),
@@ -150,33 +172,34 @@ summary_display = dbc.Jumbotron(
     fluid=True
 )
 cases_display = [
-    dbc.Row([
-        html.Div(
+    dbc.Row(
+        dbc.Col(
             dcc.Graph(
-                id='daily-cases-graph',
+                id='cases-graph',
                 config={'autosizable': True},
-                animate=False
-            ),
-            style={'width': '49%', 'display': 'inline-block'}
-        ),
-        html.Div(
-            dcc.Graph(
-                id='total-cases-graph',
-                config={'autosizable': True},
-                animate=False
-            ),
-            style={'width': '49%', 'display': 'inline-block'}
+                animate=False,
+                figure={}
+            )
         )
-    ]),
+    ),
+    dbc.Row(
+        dbc.Col(
+            dcc.Graph(
+                id='deaths-graph',
+                config={'autosizable': True},
+                animate=False,
+                figure={}
+            )
+        )
+    ),
     dbc.Row(
         dbc.Col(
             dash_table.DataTable(
                 id='output-table',
                 sort_action='native',
-                style_as_list_view=True,
                 style_cell={'padding': '5px'},
                 style_header={
-                    'backgroundColor': 'white',
+                    'backgroundColor': 'rgb(230, 230, 230)',
                     'fontWeight': 'bold'
                 },
                 style_cell_conditional=[
@@ -184,12 +207,19 @@ cases_display = [
                         'if': {'column_id': c},
                         'textAlign': 'left'
                     }
-                    for c in ['Region', 'Province']
+                    for c in ['Country', 'Region', 'Province']
+                ],
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': 'rgb(248, 248, 248)'
+                    }
                 ]
             )
         )
     )
 ]
+# TODO Graphs for testing aggregates
 testing_display = dbc.Row(dbc.Col(html.H4('Coming soon!')))
 
 # App
@@ -201,6 +231,7 @@ app.layout = dbc.Container(
         html.Div(
             [
                 dcc.Store(id='regions-store'),
+                dcc.Store(id='options-store'),
                 dcc.Store(id='provinces-store'),
                 dcc.Store(id='search-store')
             ],
@@ -242,12 +273,16 @@ app.layout = dbc.Container(
                 [
                     dbc.ModalHeader('About'),
                     dbc.ModalBody(dcc.Markdown('''
-                    This dashboard tracks and visualizes the reported numbers of COVID-19
-                    tests and cases in the Philippines.
+                    This dashboard tracks and analyzes the reported numbers of COVID-19
+                    cases in the Philippines. Break down the pandemic at the
+                    national and provincial levels and by patients' age, sex, and
+                    the severity/outcome of their case.
                     * Data are sourced from the Philippine Department of Health's
                     [official COVID-19 data drops.](https://www.doh.gov.ph/2019-nCoV)
                     Archives are updated daily at 4 PM PHT.
-                    * See the source on [Github](/).
+                    * Rates are adjusted for the 2015 census population.
+                    * See this app's repository on
+                    [Github.](https://github.com/emordonez/COVID-19-PH-Dashboard)
                     ''')),
                     dbc.ModalFooter(
                         dbc.Button('Close', id='close-about', className='ml-auto')
@@ -302,21 +337,46 @@ def on_checkbox_change(checked):
 @app.callback(
     [Output('regions-store', 'data'),
         Output('provinces-dropdown', 'options'),
-        Output('provinces-dropdown', 'value'),
-        Output('provinces-store', 'data')],
-    [Input('regions-dropdown', 'value')]
+        Output('provinces-dropdown', 'value')],
+    [Input('regions-dropdown', 'value')],
+    [State('regions-store', 'data'), 
+        State('options-store', 'data'),
+        State('provinces-store', 'data')]
 )
-def set_province_options(input_regions):
+def set_province_options(input_regions, stored_regions, stored_options, stored_provinces): 
     if input_regions:
-        output_options = [
-            {'label': province_names[province], 'value': province}
-            for region in input_regions
-            for province in provinces_by_region_dict[region]
-        ]
-        output_value = [d['value'] for d in output_options]
-        return input_regions, output_options, output_value, output_value
+        if len(input_regions) == len(stored_regions) + 1:
+            (new_region, ) = set(input_regions) - set(stored_regions)
+            new_provinces = provinces_by_region_dict[new_region]
+            new_options = [
+                {'label': province_names[province], 'value': province}
+                for province in new_provinces
+            ]
+            output_options = stored_options + new_options
+            output_value = stored_provinces + [d['value'] for d in new_options]
+        elif len(input_regions) == len(stored_regions) - 1:
+            (removed_region, ) = set(stored_regions) - set(input_regions)
+            removed_provinces = provinces_by_region_dict[removed_region]
+            output_options = [
+                {'label': province_names[province], 'value': province}
+                for region in input_regions
+                for province in provinces_by_region_dict[region]
+            ]
+            output_value = [
+                province for province in stored_provinces
+                if province not in removed_provinces
+            ]
+        return input_regions, output_options, output_value
     else:
-        return [], [], [], []
+        return [], [], []
+
+
+@app.callback(
+    [Output('options-store', 'data'), Output('provinces-store', 'data')],
+    [Input('provinces-dropdown', 'options'), Input('provinces-dropdown', 'value')]
+)
+def store_provinces(options, value):
+    return options, value
 
 
 @app.callback(
@@ -325,57 +385,311 @@ def set_province_options(input_regions):
         Input('select-button', 'n_clicks'),
         Input('filters-switch-input', 'value')],
     [State('regions-store', 'data'),
-        State('provinces-store', 'data')]
+        State('provinces-store', 'data'),
+        State('summed-provinces-check', 'value'),
+        State('tabs', 'active_tab')]
 )
-def filter_query(all_checked, n, filters, stored_regions, stored_provinces):
-    df = cases
-    if not all_checked and stored_regions and stored_provinces:
-        df = df.query("Region in @stored_regions")
-        bar_df = df.query("(Province in @stored_provinces) | (Province != Province)")
-        line_df = bar_df
-        bar_df = df.groupby(['Region', 'Province'] + filters).apply(case_aggregates)
+def filter_query(
+    all_checked, n, filters,
+    input_regions, input_provinces, summed_check, active_tab):
+    if active_tab != 'cases':
+        raise PreventUpdate
+
+    # Filter cases for input provinces and filters
+    if not all_checked and input_regions and input_provinces:
+        table_df = cases.query("Region in @input_regions").query("Province in @input_provinces")
+        if summed_check:
+            table_df['Province'] = "{} PROVINCES".format(len(input_provinces))
+            table_df['pop_2015'] = table_df['pop_2015'].unique().sum()
+        line_df = table_df
+        table_df = table_df.groupby(['Province'] + filters).apply(case_aggregates)
     elif filters:
-        bar_df = df.groupby(filters).apply(case_aggregates)
-        line_df = df
+        line_df = cases
+        table_df = cases.groupby(filters).apply(case_aggregates)
     else:
-        bar_df = df.groupby('Country').apply(case_aggregates)
-        line_df = df
-    bar_df.reset_index(inplace=True)
+        line_df = cases
+        table_df = cases.groupby('Country').apply(case_aggregates)
+    table_df.reset_index(inplace=True)
     line_df.reset_index()
-    return {'bar': bar_df.to_dict('records'), 'line': line_df.to_dict('records')}
+
+    # Clean cases data
+    filters = [x for x in filters if x != 'HealthStatus']
+    if all_checked:
+        cases_df = line_df.groupby(
+            ['DateRepConf', 'Country'] + filters
+        )['CaseCode'].count().reset_index(name='Cases')
+    else:
+        cases_df = line_df.groupby(
+            ['DateRepConf', 'Province', 'pop_2015'] + filters
+        )['CaseCode'].count().reset_index(name='Cases')
+
+    dates = cases_df['DateRepConf'].sort_values().values
+    start_date = dates[0]
+    end_date = dates[-1]
+    datelist = pd.DataFrame(pd.date_range(start=start_date, end=end_date, name='Date'))  
+    cases_df = datelist.merge(
+        cases_df, left_on='Date', right_on='DateRepConf', how='left')
+
+    cases_df['Cases'] = cases_df['Cases'].fillna(0)
+    if all_checked:
+        cases_df['Total'] = cases_df.groupby(['Country'] + filters)['Cases'].cumsum()
+        cases_df['Per100k'] = cases_df['Total'] / NATIONAL_POP * 100000
+        cases_df.drop(columns=['DateRepConf'], inplace=True)   
+    else:
+        cases_df['Total'] = cases_df.groupby(['Province'] + filters)['Cases'].cumsum()
+        cases_df['Per100k'] = cases_df['Total'] / cases_df['pop_2015'] * 100000
+        cases_df.drop(columns=['DateRepConf', 'pop_2015'], inplace=True)    
+    cases_df = cases_df.dropna()
+    
+    # Clean deaths data
+    deaths = line_df.query("`HealthStatus` == 'Died'")
+    if all_checked:
+        totals = line_df.groupby(
+            ['Country'] + filters
+        )['CaseCode'].count().reset_index(name='Cases')
+        deaths = deaths.groupby(
+            ['Country'] + filters
+        )['CaseCode'].count().reset_index(name='Deaths')
+        rates_df = totals.merge(deaths, on=(['Country'] + filters))
+    else:
+        totals = line_df.groupby(
+            ['Province'] + filters
+        )['CaseCode'].count().reset_index(name='Cases')
+        deaths = deaths.groupby(
+            ['Province'] + filters
+        )['CaseCode'].count().reset_index(name='Deaths')
+        rates_df = totals.merge(deaths, on=(['Province'] + filters))
+    rates_df['Rate'] = rates_df['Deaths'] / rates_df['Cases']
+
+    data = {
+        'cases': cases_df.to_dict('records'),
+        'deaths': rates_df.to_dict('records'),
+        'aggs': table_df.to_dict('records')
+    }
+    return data
 
 
 @app.callback(
-    [Output('daily-cases-graph', 'figure'), Output('total-cases-graph', 'figure')],
+    [Output('cases-graph', 'figure'), Output('deaths-graph', 'figure')],
     [Input('search-store', 'data')],
-    [State('tabs', 'active_tab')]
+    [State('all-provinces-check', 'value'), 
+        State('filters-switch-input', 'value'),
+        State('tabs', 'active_tab')]
 )
-def on_data_set_figures(data, active_tab):
+def on_data_set_figures(data, all_checked, filters, active_tab):    
     if data is None or len(data) == 0:
         raise PreventUpdate
-    elif active_tab != 'cases':
-        raise PreventUpdate
-    
-    df = pd.DataFrame.from_dict(data['line'])
 
-    df = df.groupby('DateRepConf')['CaseCode'].count().reset_index(name='Cases')
-    df = df.assign(Total = df['Cases'].cumsum())
-    daily_fig = go.Figure()
-    daily_fig.add_trace(go.Scatter(x=df['DateRepConf'], y=df['Cases'], mode='lines', name='Daily Cases'))
-    total_fig = go.Figure()
-    total_fig.add_trace(go.Scatter(x=df['DateRepConf'], y=df['Total'], mode='lines', name='Total Cases'))
-    return daily_fig, total_fig
+    cases_df = pd.DataFrame.from_dict(data['cases'])
+    deaths_df = pd.DataFrame.from_dict(data['deaths'])
+
+    if all_checked:
+        if 'AgeGroup' in filters and 'Sex' in filters:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Total',
+                color='AgeGroup',
+                facet_col='Sex',
+                hover_data=['Cases', 'Total'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER},
+                title='COVID-19 cases nationwide by sex and age groups',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='AgeGroup',
+                facet_col='Sex',
+                hover_data=['Deaths'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER, 'Sex': ['Male', 'Female']},
+                log_x=True,
+                title='COVID-19 deaths nationwide by sex and age groups',
+                template='plotly'
+            )
+        elif 'AgeGroup' in filters:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Total',
+                color='AgeGroup',
+                hover_data=['Cases', 'Total'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER},
+                title='COVID-19 cases nationwide by age groups',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='AgeGroup',
+                hover_data=['Deaths'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER},
+                log_x=True,
+                title='COVID-19 deaths nationwide by age groups',
+                template='plotly'
+            )
+        elif 'Sex' in filters:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Total',
+                color='Sex',
+                hover_data=['Cases', 'Total'],
+                category_orders={'Sex': ['Male', 'Female']},
+                title='COVID-19 cases nationwide by sex',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='Sex',
+                hover_data=['Deaths'],
+                category_orders={'Sex': ['Male', 'Female']},
+                log_x=True,
+                title='COVID-19 deaths nationwide by sex',
+                template='plotly'
+            )
+        else:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Per100k',
+                color='Country',
+                hover_data=['Cases', 'Total'],
+                title='COVID-19 case rates nationwide',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='Country',
+                hover_data=['Deaths'],
+                log_x=True,
+                title='COVID-19 deaths nationwide',
+                template='plotly'
+            )
+    else:
+        if 'AgeGroup' in filters and 'Sex' in filters:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Total',
+                line_group='Province',
+                color='AgeGroup',
+                facet_col='Sex',
+                hover_data=['Cases', 'Total'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER, 'Sex': ['Male', 'Female']},
+                title='Provincial COVID-19 cases by sex and age groups',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='AgeGroup',
+                facet_col='Sex',
+                hover_data=['Province', 'Deaths'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER, 'Sex': ['Male', 'Female']},
+                log_x=True,
+                title='Provincial COVID-19 deaths by sex and age groups',
+                template='plotly'
+            )
+        elif 'AgeGroup' in filters:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Total',
+                line_group='Province',
+                color='AgeGroup',
+                hover_data=['Cases', 'Total'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER},
+                title='Provincial COVID-19 cases by age groups',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='AgeGroup',
+                hover_data=['Province', 'Deaths'],
+                category_orders={'AgeGroup': AGEGROUP_ORDER},
+                log_x=True,
+                title='Provincial COVID-19 deaths by age groups',
+                template='plotly'
+            )
+        elif 'Sex' in filters:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Total',
+                line_group='Province',
+                color='Sex',
+                hover_data=['Cases', 'Total'],
+                category_orders={'Sex': ['Male', 'Female']},
+                title='Provincial COVID-19 cases by sex',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='Province',
+                facet_col='Sex',
+                hover_data=['Deaths'],
+                category_orders={'Sex': ['Male', 'Female']},
+                log_x=True,
+                title='Provincial COVID-19 deaths by sex',
+                template='plotly'
+            )
+        else:
+            cases_fig = px.line(
+                cases_df,
+                x='Date',
+                y='Per100k',
+                color='Province',
+                hover_data=['Cases', 'Total'],
+                title='Provincial COVID-19 cases',
+                template='plotly'
+            )
+            deaths_fig = px.scatter(
+                deaths_df,
+                x='Cases',
+                y='Rate',
+                size='Deaths',
+                color='Province',
+                hover_data=['Deaths'],
+                log_x=True,
+                title='Provincial COVID-19 deaths',
+                template='plotly'
+            )
+    return cases_fig, deaths_fig
 
 
 @app.callback(
-    [Output('output-table', 'data'), Output('output-table', 'columns')],
+    [Output('output-table', 'columns'), Output('output-table', 'data')],
     [Input('search-store', 'data')],
     [State('tabs', 'active_tab')]
 )
 def on_data_set_table(data, active_tab):
-    df = pd.DataFrame.from_dict(data['bar'])
+    if data is None or len(data) == 0:
+        raise PreventUpdate
+    elif active_tab != 'cases':
+        raise PreventUpdate
+
+    df = pd.DataFrame.from_dict(data['aggs'])
     columns = [{'name': i, 'id': i} for i in df.columns]
-    return data['bar'], columns
+    return columns, data['aggs']
 
 
 @app.callback(
@@ -393,4 +707,4 @@ def render_tab_content(active_tab):
 
 
 if __name__ == '__main__':
-    app.run_server(host='127.0.0.1', port='8050', debug=True)
+    app.run_server(debug=True)
