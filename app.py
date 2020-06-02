@@ -118,7 +118,7 @@ default_data = {
 CASES = f"{cases['CaseCode'].count():,}" + " cases"
 DEATHS = f"{cases[cases['HealthStatus'] == 'Died']['CaseCode'].count():,}" + " deaths"
 RECOVERIES = f"{cases[cases['HealthStatus'] == 'Recovered']['CaseCode'].count():,}" + " recoveries"
-CONFIRM_TO_DATE = "confirmed by the Department of Health as of " + date.today().strftime("%B %d") + "."
+CONFIRM_TO_DATE = "confirmed by the Department of Health as of May 30." # + date.today().strftime("%B %d") + "."
 
 TOTAL_TESTS = (f"{aggs.groupby('facility_name')['cumulative_unique_individuals'].max().sum():,}" +
     " people tested")
@@ -211,21 +211,27 @@ summary_display = dbc.Jumbotron(
 cases_display = [
     dbc.Row(
         dbc.Col(
-            dcc.Graph(
-                id='cases-graph',
-                config={'autosizable': True},
-                animate=False,
-                figure={}
+            dcc.Loading(
+                dcc.Graph(
+                    id='cases-graph',
+                    config={'autosizable': True},
+                    animate=False,
+                    figure={}
+                ),
+                type='circle'
             )
         )
     ),
     dbc.Row(
         dbc.Col(
-            dcc.Graph(
-                id='deaths-graph',
-                config={'autosizable': True},
-                animate=False,
-                figure={}
+            dcc.Loading(
+                dcc.Graph(
+                    id='deaths-graph',
+                    config={'autosizable': True},
+                    animate=False,
+                    figure={}
+                ),
+                type='circle'
             )
         )
     ),
