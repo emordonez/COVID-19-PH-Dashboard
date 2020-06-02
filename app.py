@@ -73,6 +73,43 @@ population = pd.read_csv('assets/population.csv')
 cases = cases.merge(population, left_on='Province', right_on='name', how='left')
 NATIONAL_POP = population[population['name'] == 'PHILIPPINES']['pop_2015'].iloc[0]
 
+# Default data for display
+# Same code as filter_query(), but callback functions can't be called outside the wrapper's scope
+table_df = cases.query("`Province` == 'METRO MANILA'")
+df = table_df
+table_df = table_df.groupby('Province').apply(case_aggregates)
+table_df.reset_index(inplace=True)
+df.reset_index()
+
+cases_df = df.groupby(
+    ['DateRepConf', 'Province', 'pop_2015']
+)['CaseCode'].count().reset_index(name='Cases')
+
+dates = cases_df['DateRepConf'].sort_values().values
+start_date = dates[0]
+end_date = dates[-1]
+datelist = pd.DataFrame(pd.date_range(start=start_date, end=end_date, name='Date'))  
+cases_df = datelist.merge(
+    cases_df, left_on='Date', right_on='DateRepConf', how='left')
+
+cases_df['Cases'] = cases_df['Cases'].fillna(0)
+cases_df['Total'] = cases_df.groupby('Province')['Cases'].cumsum()
+cases_df['Per100k'] = cases_df['Total'] / cases_df['pop_2015'] * 100000
+cases_df.drop(columns=['DateRepConf', 'pop_2015'], inplace=True)    
+cases_df = cases_df.dropna()
+
+deaths = df.query("`HealthStatus` == 'Died'")
+totals = df.groupby('Province')['CaseCode'].count().reset_index(name='Cases')
+deaths = deaths.groupby('Province')['CaseCode'].count().reset_index(name='Deaths')
+rates_df = totals.merge(deaths, on='Province')
+rates_df['Rate'] = rates_df['Deaths'] / rates_df['Cases']
+
+default_data = {
+    'cases': cases_df.to_dict('records'),
+    'deaths': rates_df.to_dict('records'),
+    'aggs': table_df.to_dict('records')
+}
+
 # Testing aggregates cleaning
 # TODO Clean and display data in aggs dataframe
 
@@ -112,13 +149,13 @@ subdivisions_dropdown = dbc.FormGroup([
             for region in region_names
         ],
         multi=True,
-        value=[],
+        value=['NCR'],
         placeholder='Region'
     ),
     dcc.Dropdown(
         id='provinces-dropdown',
         multi=True,
-        value=[],
+        value=['METRO MANILA'],
         placeholder='Search provinces'
     ),
     dbc.Button(
@@ -230,15 +267,23 @@ app.layout = dbc.Container(
     [
         html.Div(
             [
-                dcc.Store(id='regions-store'),
-                dcc.Store(id='options-store'),
-                dcc.Store(id='provinces-store'),
-                dcc.Store(id='search-store')
+                dcc.Store(id='regions-store', data=[]),
+                dcc.Store(id='options-store', data=[]),
+                dcc.Store(id='provinces-store', data=[]),
+                dcc.Store(id='search-store', data=default_data)
             ],
             style={'display': 'none'}
         ),
         dbc.Row(html.H2('COVID-19 Cases and Testing in the Philippines'), className='mt-3 ml-1'),
         html.Hr(),
+        dbc.Row(dbc.Col(html.P(
+        '''
+        Hover on a trace for more data. Click on a trace in the legend to add/remove it
+        from the plot. Double click on a trace to isolate it, and double click again to
+        restore all other traces. Use the tools in the upper right of the plot to pan,
+        zoom, and compare data on hover.
+        '''
+        ))),
         dbc.Row([
             dbc.Col(
                 dbc.Tabs(
@@ -383,15 +428,15 @@ def store_provinces(options, value):
     Output('search-store', 'data'),
     [Input('all-provinces-check', 'value'),
         Input('select-button', 'n_clicks'),
-        Input('filters-switch-input', 'value')],
+        Input('filters-switch-input', 'value'),
+        Input('tabs', 'active_tab')],
     [State('regions-store', 'data'),
         State('provinces-store', 'data'),
-        State('summed-provinces-check', 'value'),
-        State('tabs', 'active_tab')]
+        State('summed-provinces-check', 'value')]
 )
 def filter_query(
-    all_checked, n, filters,
-    input_regions, input_provinces, summed_check, active_tab):
+    all_checked, n, filters, active_tab,
+    input_regions, input_provinces, summed_check):
     if active_tab != 'cases':
         raise PreventUpdate
 
