@@ -31,8 +31,8 @@ def clean_dates(df):
 
 # Read data
 # TODO Write scripts to automatically download the latest data from Google Drive
-cases = pd.read_csv('DOH COVID Data Drop_ 20200617 - 04 Case Information.csv')
-aggs = pd.read_csv('DOH COVID Data Drop_ 20200617 - 07 Testing Aggregates.csv')
+cases = pd.read_csv('DOH COVID Data Drop_ 20200618 - 04 Case Information.csv')
+aggs = pd.read_csv('DOH COVID Data Drop_ 20200618 - 07 Testing Aggregates.csv')
 
 # Names management
 reg_df = pd.read_csv('assets/regions.csv').set_index('internal_name')
