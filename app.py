@@ -31,8 +31,8 @@ def clean_dates(df):
 
 # Read data
 # TODO Write scripts to automatically download the latest data from Google Drive
-cases = pd.read_csv('DOH COVID Data Drop_ 20200616 - 04 Case Information.csv')
-aggs = pd.read_csv('DOH COVID Data Drop_ 20200616 - 07 Testing Aggregates.csv')
+cases = pd.read_csv('DOH COVID Data Drop_ 20200617 - 04 Case Information.csv')
+aggs = pd.read_csv('DOH COVID Data Drop_ 20200617 - 07 Testing Aggregates.csv')
 
 # Names management
 reg_df = pd.read_csv('assets/regions.csv').set_index('internal_name')
@@ -118,7 +118,7 @@ default_data = {
 CASES = f"{cases['CaseCode'].count():,}" + " cases"
 DEATHS = f"{cases[cases['HealthStatus'] == 'Died']['CaseCode'].count():,}" + " deaths"
 RECOVERIES = f"{cases[cases['HealthStatus'] == 'Recovered']['CaseCode'].count():,}" + " recoveries"
-CONFIRM_TO_DATE = "confirmed by the Department of Health as of Jun 16." # + date.today().strftime("%B %d") + "."
+CONFIRM_TO_DATE = "confirmed by the Department of Health as of Jun 17." # + date.today().strftime("%B %d") + "."
 
 TOTAL_TESTS = (f"{aggs.groupby('facility_name')['cumulative_unique_individuals'].max().sum():,}" +
     " people tested")
